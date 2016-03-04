@@ -1,0 +1,89 @@
+{% import '_includes/forms' as forms %}
+
+{% block main %}
+
+{{ forms.textField({
+    label: 'Target Keyword',
+    required: true,
+    instructions: "Separate Multiple Keywords with commas.",
+    name: name,
+    value: value
+  })
+}}
+
+{% set allTables = craft.seoscoring.seoTables(this, value) %}
+
+{% if allTables|length %}
+<h1>SEO Keyword Score</h1>
+
+<h2>Scoring Levels:</h2>
+<p><b style="color:#00B200">Green</b>: 25+</p>
+<p><b style="color:#F4B82A">Yellow</b>: 15 - 24</p>
+<p><b style="color:#B54C39">Red</b>: Under 15</p>
+<br>
+
+<div class="pane">
+  <nav class="tabs">
+    <ul>
+    {% for table in allTables %}
+      <li><a href="#fields-scoring-tab{{loop.index}}" class="tab">{{table.keyword}}</a></li>
+    {% endfor %}
+    </ul>
+  </nav>
+
+  <div>
+    {% for table in allTables %}
+
+      <div class="scoring-tab" id="scoring-tab{{loop.index}}">
+        <h2>Score for <i>{{table.keyword}}</i>:</h2>
+
+        <table class="data fullwidth">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Exists?/Key Category</th>
+              <th>Occurrences</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set keyCategoryTotal = 0 %}
+            {% for category in table.categories %}
+              {% if category.key_category == "Yes" %}
+                {% set keyCategoryTotal = keyCategoryTotal + 1 %}
+              {% endif %}
+              <tr>
+                <td>{{category.name}}</td>
+                <td>{{category.description}}</td>
+                <td>{{category.contains}} / {{category.key_category}}</td>
+                <td>{{category.occurrences}}</td>
+                <td>{{category.points}}</td>
+              </tr>
+            {% endfor %}
+            <tr>
+              <td><b>Totals</b></td>
+              <td></td>
+              <td><b>{{table.totals.totalTally}} out of {{keyCategoryTotal}}</b></td>
+              <td><b>{{table.totals.totalOccurrences}}</b></td>
+              <td><b>{{table.totals.totalPoints}}</b></td>
+            </tr>
+          </tbody>
+
+        </table>
+
+        <h2>Initial Rating for {{table.keyword}}: <span style="color:{% if table.initial_rating == "Green"%}#00B200{% elseif table.initial_rating == "Yellow"%}#F4B82A{% elseif table.initial_rating == "Red"%}#B54C39{% endif %}">{{table.initial_rating}}</span></h2>
+
+        <h3>If the target keyword is accounted for in fewer than 5 of the key categories, the page is downgraded one level.</h3>
+        <h3>If the target keyword is accounted for in fewer than 3 of the key categories, the page is downgraded two levels.</h3>
+
+        <h2>Final Rating for {{table.keyword}}: <span style="color:{% if table.final_rating == "Green"%}#00B200{% elseif table.final_rating == "Yellow"%}#F4B82A{% elseif table.final_rating == "Red"%}#B54C39{% endif %}">{{table.final_rating}}</span></h2>
+      </div>
+
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
