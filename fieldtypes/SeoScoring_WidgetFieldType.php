@@ -14,6 +14,10 @@ class SeoScoring_WidgetFieldType extends BaseFieldType
 
     public function getInputHtml($name, $value)
     {
+
+        craft()->templates->includeJsResource('seoscoring/javascript/main.js');
+        craft()->templates->includeCssResource('seoscoring/stylesheets/style.css');
+
         $thisElement = $this->element;
         return craft()->templates->render('seoscoring/_widget', array(
             'name'  => $name,
@@ -21,6 +25,5 @@ class SeoScoring_WidgetFieldType extends BaseFieldType
             'this' => $thisElement
         ));
     }
-
 
 }

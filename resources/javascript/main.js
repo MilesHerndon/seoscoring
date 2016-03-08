@@ -1,5 +1,3 @@
-console.log("hello");
-
 $(document).ready(function(){
   var scoringTabs = $(".scoring-tab");
 

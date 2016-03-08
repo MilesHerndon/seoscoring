@@ -4,29 +4,29 @@
 
 {{ forms.textField({
     label: 'Target Keyword',
-    required: true,
+    required: false,
     instructions: "Separate Multiple Keywords with commas.",
     name: name,
     value: value
   })
 }}
 
-{% set allTables = craft.seoscoring.seoTables(this, value) %}
+{% set allTables = craft.seoscoring.seoInfo(this.id) %}
 
 {% if allTables|length %}
 <h1>SEO Keyword Score</h1>
 
 <h2>Scoring Levels:</h2>
-<p><b style="color:#00B200">Green</b>: 25+</p>
-<p><b style="color:#F4B82A">Yellow</b>: 15 - 24</p>
-<p><b style="color:#B54C39">Red</b>: Under 15</p>
+<p><b class="green">Green</b>: 25+</p>
+<p><b class="yellow">Yellow</b>: 15 - 24</p>
+<p><b class="red">Red</b>: Under 15</p>
 <br>
 
 <div class="pane">
   <nav class="tabs">
     <ul>
     {% for table in allTables %}
-      <li><a href="#fields-scoring-tab{{loop.index}}" class="tab">{{table.keyword}}</a></li>
+      <li><a href="#fields-scoring-tab{{loop.index}}" class="tab {{table.final_rating|lower}}">{{table.keyword}}</a></li>
     {% endfor %}
     </ul>
   </nav>

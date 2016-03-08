@@ -6,17 +6,30 @@ include_once CRAFT_PLUGINS_PATH .'/seoscoring/resources/vendor/simple_html_dom.p
 class SeoScoringService extends BaseApplicationComponent
 {
 
-  public function getSeoTables($entry, $seoKeyword)
+  public function compileSeoTables($entry)
   {
     global $html, $keyword, $seoInfo;
     $all_keyword_results = array();
+
+    $handle = '';
+    $fields = $entry->getFieldLayout()->getFields();
+    foreach ($fields as $field)
+    {
+        $type = $field->getField()->type;
+        if ($type == 'SeoScoring_Widget') {
+          $handle = $field->getField()->handle;
+        }
+    }
+
+
+    $seoKeyword = $entry->$handle;
 
     if (!empty($seoKeyword)) {
       // Define initial variable values
       $keyword = strtolower($seoKeyword);
       $keywords = array_map('trim', explode(',', $keyword));
       $page_url = $entry->url;
-      $html = self::_curlPage($page_url);
+      $html = $this->_curlPage($page_url);
 
       foreach ($keywords as $keyword) {
         $seoInfo = array('keyword' => $keyword, 'totals'=>array('totalTally'=>0, 'totalPoints'=>0, 'totalOccurrences'=>0));
@@ -33,70 +46,78 @@ class SeoScoringService extends BaseApplicationComponent
         $imgs =       array('name' => "Image Alt Text", 'description' => "+5 once", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
 
         // Page Title
-        $page_title = $html->find("title",0);
-        if (substr_count(strtolower($page_title), $keyword) > 0){
+        $page_title = strtolower($html->find("title",0));
+        $count = preg_match_all('/\b'.$keyword.'\b/', $page_title);
+        if ($count > 0){
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=5;
-          $seoInfo['totals']['totalOccurrences']+=substr_count(strtolower($page_title), $keyword);
+          $seoInfo['totals']['totalOccurrences']+=$count;
           $title['contains'] = "Yes!";
-          $title['occurrences'] = substr_count(strtolower($page_title), $keyword);
+          $title['occurrences'] = $count;
           $title['points'] = 5;
         }
 
         // Page URL
-        $url_keyword = str_replace(' ','-',$keyword);
-        if (substr_count(strtolower($page_url), $url_keyword) > 0){
+        $url_string = str_replace(array('-', '/', '.'),' ',$page_url);
+        $count = preg_match_all('/\b'.$keyword.'\b/', strtolower($url_string));
+        if ($count > 0){
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=5;
-          $seoInfo['totals']['totalOccurrences']+=substr_count(strtolower($page_url), $url_keyword);
+          $seoInfo['totals']['totalOccurrences']+=$count;
           $url['contains'] = "Yes!";
-          $url['occurrences'] = substr_count(strtolower($page_url), $url_keyword);
+          $url['occurrences'] = $count;
           $url['points'] = 5;
         }
 
         // Meta description
         $description = $html->find("meta[name='description']", 0)->content;
-        if (substr_count(strtolower($description), $keyword) > 0){
+        $count = preg_match_all('/\b'.$keyword.'\b/', $description);
+        if ($count > 0){
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=0;
-          $seoInfo['totals']['totalOccurrences']+=substr_count(strtolower($description), $keyword);
+          $seoInfo['totals']['totalOccurrences']+=$count;
           $meta_desc['contains'] = "Yes!";
-          $meta_desc['occurrences'] = substr_count(strtolower($description), $keyword);
+          $meta_desc['occurrences'] = $count;
           $meta_desc['points'] = 0;
         }
 
         // Images
-        foreach($html->find('img') as $element){
-          if (substr_count(strtolower($element->alt), $keyword) > 0){
-            $seoInfo['totals']['totalTally']++;
-            $seoInfo['totals']['totalPoints']+=5;
-            $seoInfo['totals']['totalOccurrences']+=substr_count(strtolower($element->alt), $keyword);
-            $imgs['contains'] = "Yes!";
-            $imgs['occurrences'] = substr_count(strtolower($element->alt), $keyword);
-            $imgs['points'] = 5;
-            break;
-          }
+        $tally_array = $html->find('img');
+        $tally_string = '';
+        foreach ($tally_array as $tally_index){
+          $tally_string .= ' ' .$tally_index->alt;
+        }
+        $tally_string = strtolower(strip_tags($tally_string));
+        $count = preg_match_all('/\b'.$keyword.'\b/', $tally_string);
+        if ($count > 0){
+          $seoInfo['totals']['totalTally']++;
+          $seoInfo['totals']['totalPoints']+=5;
+          $seoInfo['totals']['totalOccurrences']+=$count;
+          $imgs['contains'] = "Yes!";
+          $imgs['occurrences'] = $count;
+          $imgs['points'] = 5;
         }
 
-        $seoInfo['categories']['body'] = self::_tallyer('p, h5, h6, blockquote, ul, ol, span, table, pre, cite, code, small, label, nav', $body, 1);
-        $seoInfo['categories']['bold'] = self::_toggler('strong, b', $bold, 1, 0);
-        $seoInfo['categories']['italic'] = self::_toggler('em, i', $italic, 1, 0);
-        $seoInfo['categories']['h1h2'] = self::_tallyer('h1, h2', $h1h2, 3);
-        $seoInfo['categories']['h3h4'] = self::_tallyer('h3, h4', $h3h4, 2);
+        $seoInfo['categories']['body'] = $this->_tallyer('p, h5, h6, blockquote, ul, ol, span, table, pre, cite, code, small, label, nav', $body, 1);
+        $seoInfo['categories']['bold'] = $this->_toggler('strong, b', $bold, 1, 0);
+        $seoInfo['categories']['italic'] = $this->_toggler('em, i', $italic, 1, 0);
+        $seoInfo['categories']['h1h2'] = $this->_tallyer('h1, h2', $h1h2, 3);
+        $seoInfo['categories']['h3h4'] = $this->_tallyer('h3, h4', $h3h4, 2);
         $seoInfo['categories']['title'] = $title;
         $seoInfo['categories']['url'] = $url;
         $seoInfo['categories']['meta_desc'] = $meta_desc;
         $seoInfo['categories']['images'] = $imgs;
 
-        $seoInfo['initial_rating'] = self::_rating($seoInfo)[0];
-        $seoInfo['final_rating'] = self::_rating($seoInfo)[1];
+        $seoInfo['initial_rating'] = $this->_rating($seoInfo)[0];
+        $seoInfo['final_rating'] = $this->_rating($seoInfo)[1];
 
         $all_keyword_results[] = $seoInfo;
       }
     }
 
-    return $all_keyword_results;
+    $this->saveSeoInfo($all_keyword_results, $entry->id);
 
+    return $all_keyword_results;
 
   }
 
@@ -120,7 +141,7 @@ class SeoScoringService extends BaseApplicationComponent
   {
     global $keyword, $html, $seoInfo;
 
-    $count = self::_getStringCount($query_string, $keyword);
+    $count = $this->_getStringCount($query_string, $keyword);
 
     if($count > 0){
       $seoInfo['totals']['totalTally']++;
@@ -137,7 +158,7 @@ class SeoScoringService extends BaseApplicationComponent
   {
     global $keyword, $html, $seoInfo;
 
-    $count = self::_getStringCount($query_string, $keyword);
+    $count = $this->_getStringCount($query_string, $keyword);
 
     if ($count > 0 ){
       $seoInfo['totals']['totalTally']+= $tally_add;
@@ -195,6 +216,38 @@ class SeoScoringService extends BaseApplicationComponent
     $count = preg_match_all('/\b'.$keyword.'\b/', $tally_string);
 
     return $count;
+  }
+
+  public function getSeoInfo($entryId)
+  {
+    // create new model
+    $seoInfoModel = new SeoScoring_SeoInfoModel();
+
+    // get record from DB
+    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
+
+    $seoInfoModel = SeoScoring_SeoInfoModel::populateModel($seoInfoRecord);
+
+    return $seoInfoModel->attributes['seoInfo'];
+  }
+
+  public function saveSeoInfo($seoArray, $entryId)
+  {
+    // get record from DB
+
+    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
+
+    if (!$seoInfoRecord)
+    {
+      $seoInfoRecord = new SeoScoring_SeoInfoRecord;
+      $seoInfoRecord->setAttribute('entryId', $entryId);
+    }
+
+    $seoInfoRecord->setAttribute('seoInfo', $seoArray);
+
+    // save record in DB
+    $seoInfoRecord->save();
+
   }
 
 }
