@@ -5,7 +5,7 @@ class SeoScoringPlugin extends BasePlugin
 {
     public function init()
     {
-        craft()->on('entries.onBeforeSaveEntry', function(Event $event)
+        craft()->on('entries.onSaveEntry', function(Event $event)
         {
             $entry = $event->params['entry'];
 

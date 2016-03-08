@@ -21,7 +21,6 @@ class SeoScoringService extends BaseApplicationComponent
         }
     }
 
-
     $seoKeyword = $entry->$handle;
 
     if (!empty($seoKeyword)) {
@@ -30,6 +29,8 @@ class SeoScoringService extends BaseApplicationComponent
       $keywords = array_map('trim', explode(',', $keyword));
       $page_url = $entry->url;
       $html = $this->_curlPage($page_url);
+
+      // break;
 
       foreach ($keywords as $keyword) {
         $seoInfo = array('keyword' => $keyword, 'totals'=>array('totalTally'=>0, 'totalPoints'=>0, 'totalOccurrences'=>0));
@@ -46,7 +47,7 @@ class SeoScoringService extends BaseApplicationComponent
         $imgs =       array('name' => "Image Alt Text", 'description' => "+5 once", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
 
         // Page Title
-        $page_title = strtolower($html->find("title",0));
+        $page_title = !empty($html->find("title",0)) ? strtolower($html->find("title",0)) : "";
         $count = preg_match_all('/\b'.$keyword.'\b/', $page_title);
         if ($count > 0){
           $seoInfo['totals']['totalTally']++;
@@ -70,7 +71,7 @@ class SeoScoringService extends BaseApplicationComponent
         }
 
         // Meta description
-        $description = $html->find("meta[name='description']", 0)->content;
+        $description = !empty($html->find("meta[name='description']", 0)) ? strtolower($html->find("meta[name='description']", 0)->content) : "";
         $count = preg_match_all('/\b'.$keyword.'\b/', $description);
         if ($count > 0){
           $seoInfo['totals']['totalTally']++;
