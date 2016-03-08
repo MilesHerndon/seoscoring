@@ -11,7 +11,7 @@ class SeoScoring_SeoInfoRecord extends BaseRecord
   public function defineAttributes()
   {
     return array(
-      'seoInfo' => array(AttributeType::Mixed, 'default'=>'')
+      'seoInfo' => array(AttributeType::Mixed, 'default'=>array('keyword'=>""))
     );
   }
 

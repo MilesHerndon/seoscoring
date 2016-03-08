@@ -48,17 +48,24 @@ class SeoScoringPlugin extends BasePlugin
 
     public function getEntryTableAttributeHtml($entry, $attribute)
     {
+        if ($attribute == 'seo_score' || $attribute == 'target_keyword')
+            $seoInfo = craft()->seoScoring->getSeoInfo($entry->id);
         if ($attribute == 'seo_score')
         {
-            $score = craft()->seoScoring->getSeoInfo($entry->id);
-            return '<span class="'.strtolower($score[0]['final_rating']).'">' . $score[0]['final_rating'] . '</span>';
+            if (isset($seoInfo[0])) {
+                $score = $seoInfo;
+                return '<span class="'.strtolower($score[0]['final_rating']).'">' . $score[0]['final_rating'] . '</span>';
+            }
+            else{
+                return '';
+            }
         }
         if ($attribute == 'target_keyword')
         {
-            $keyword = craft()->seoScoring->getSeoInfo($entry->id)[0]['keyword'];
-            if(count(craft()->seoScoring->getSeoInfo($entry->id))>1)
+            $keyword = isset($seoInfo[0]) ? $seoInfo[0]['keyword'] : '';
+            if(isset($seoInfo[0]) && count($seoInfo)>1)
             {
-                $keyword .= " (More keywords lie within)";
+                $keyword .= " +";
             }
             return $keyword;
         }

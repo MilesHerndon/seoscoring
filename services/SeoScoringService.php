@@ -227,7 +227,10 @@ class SeoScoringService extends BaseApplicationComponent
     // get record from DB
     $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
 
-    $seoInfoModel = SeoScoring_SeoInfoModel::populateModel($seoInfoRecord);
+    if ($seoInfoRecord) {
+      $seoInfoModel = SeoScoring_SeoInfoModel::populateModel($seoInfoRecord);
+    }
+
 
     return $seoInfoModel->attributes['seoInfo'];
   }
@@ -235,7 +238,6 @@ class SeoScoringService extends BaseApplicationComponent
   public function saveSeoInfo($seoArray, $entryId)
   {
     // get record from DB
-
     $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
 
     if (!$seoInfoRecord)
