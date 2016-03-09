@@ -11,40 +11,34 @@ class SeoScoringService extends BaseApplicationComponent
     global $html, $keyword, $seoInfo;
     $all_keyword_results = array();
 
-    $handle = '';
-    $fields = $entry->getFieldLayout()->getFields();
-    foreach ($fields as $field)
-    {
-        $type = $field->getField()->type;
-        if ($type == 'SeoScoring_Widget') {
-          $handle = $field->getField()->handle;
-        }
-    }
-
-    $seoKeyword = $entry->$handle;
+    $seoKeyword = $this->_getKeyword($entry);
 
     if (!empty($seoKeyword)) {
       // Define initial variable values
       $keyword = strtolower($seoKeyword);
       $keywords = array_map('trim', explode(',', $keyword));
       $page_url = $entry->url;
-      $html = $this->_curlPage($page_url);
 
-      // break;
+      if ($this->_isInFuture($entry)) {
+        $page_url = $this->_generateToken($entry);
+      }
+
+      $html = $this->_curlPage($page_url);
 
       foreach ($keywords as $keyword) {
         $seoInfo = array('keyword' => $keyword, 'totals'=>array('totalTally'=>0, 'totalPoints'=>0, 'totalOccurrences'=>0));
 
         // Defaults
-        $body =       array('name' => "Body Text", 'description' => "+1 per usage", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $bold =       array('name' => "- Bold", 'description' => "+1 once", 'key_category'=>"No", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $italic =     array('name' => "- Italics", 'description' => "+1 once", 'key_category'=>"No", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $h1h2 =       array('name' => "H1, H2 Tags", 'description' => "+3 per usage", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $h3h4 =       array('name' => "H3, H4 Tags", 'description' => "+2 per usage", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $title =      array('name' => "Page Title", 'description' => "+5 once", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $url =        array('name' => "Page URL", 'description' => "+5 once", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $meta_desc =  array('name' => "Meta Description", 'description' => "0 bonus points", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
-        $imgs =       array('name' => "Image Alt Text", 'description' => "+5 once", 'key_category'=>"Yes", 'contains' => "No", 'points' => 0, 'occurrences'=> 0);
+        $body =       (array) new seoArray('Body Text', "+1 per usage", true);
+        $bold =       (array) new seoArray('- Bold', "+1 once", false);
+        $italic =     (array) new seoArray('- Italics', "+1 once", false);
+        $h1h2 =       (array) new seoArray('H1, H2 Tags', "+3 per usage", true);
+        $h3h4 =       (array) new seoArray('H3, H4 Tags', "+2 per usage", true);
+        $title =      (array) new seoArray('Page Title', "+5 once", true);
+        $url =        (array) new seoArray('Page URL', "+5 once", true);
+        $meta_desc =  (array) new seoArray('Meta Description', "0 bonus points", true);
+        $imgs =       (array) new seoArray('Image Alt Text', "+5 once", true);
+        // SeoScoringPlugin::log(print_r($body, true));
 
         // Page Title
         $page_title = !empty($html->find("title",0)) ? strtolower($html->find("title",0)) : "";
@@ -53,7 +47,7 @@ class SeoScoringService extends BaseApplicationComponent
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=5;
           $seoInfo['totals']['totalOccurrences']+=$count;
-          $title['contains'] = "Yes!";
+          $title['contains'] = true;
           $title['occurrences'] = $count;
           $title['points'] = 5;
         }
@@ -65,7 +59,7 @@ class SeoScoringService extends BaseApplicationComponent
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=5;
           $seoInfo['totals']['totalOccurrences']+=$count;
-          $url['contains'] = "Yes!";
+          $url['contains'] = true;
           $url['occurrences'] = $count;
           $url['points'] = 5;
         }
@@ -77,7 +71,7 @@ class SeoScoringService extends BaseApplicationComponent
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=0;
           $seoInfo['totals']['totalOccurrences']+=$count;
-          $meta_desc['contains'] = "Yes!";
+          $meta_desc['contains'] = true;
           $meta_desc['occurrences'] = $count;
           $meta_desc['points'] = 0;
         }
@@ -94,7 +88,7 @@ class SeoScoringService extends BaseApplicationComponent
           $seoInfo['totals']['totalTally']++;
           $seoInfo['totals']['totalPoints']+=5;
           $seoInfo['totals']['totalOccurrences']+=$count;
-          $imgs['contains'] = "Yes!";
+          $imgs['contains'] = true;
           $imgs['occurrences'] = $count;
           $imgs['points'] = 5;
         }
@@ -120,6 +114,69 @@ class SeoScoringService extends BaseApplicationComponent
 
     return $all_keyword_results;
 
+  }
+
+  public function getSeoInfo($entryId)
+  {
+    // create new model
+    $seoInfoModel = new SeoScoring_SeoInfoModel();
+
+    // get record from DB
+    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
+
+    if ($seoInfoRecord) {
+      $seoInfoModel = SeoScoring_SeoInfoModel::populateModel($seoInfoRecord);
+    }
+
+
+    return $seoInfoModel->attributes['seoInfo'];
+  }
+
+  public function saveSeoInfo($seoArray, $entryId)
+  {
+    // get record from DB
+    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
+
+    if (!$seoInfoRecord)
+    {
+      $seoInfoRecord = new SeoScoring_SeoInfoRecord;
+      $seoInfoRecord->setAttribute('entryId', $entryId);
+    }
+
+    $seoInfoRecord->setAttribute('seoInfo', $seoArray);
+
+    // save record in DB
+    $seoInfoRecord->save();
+
+  }
+
+
+  // HELPER FUNCTIONS
+  private function _isInFuture($entry)
+  {
+    return date('U') < $entry->postDate->getTimestamp() ? true : false;
+  }
+
+  private function _generateToken($entry)
+  {
+    $tokenParams = array('action'=>'entries/viewSharedEntry', 'params'=>array('entryId'=>$entry->id, 'locale'=>'en_us'));
+    $token = craft()->tokens->createToken($tokenParams);
+    $page_url = UrlHelper::getUrlWithToken($entry->url, $token);
+    return $page_url;
+  }
+
+  private function _getKeyword($entry)
+  {
+    $fields = $entry->getFieldLayout()->getFields();
+    foreach ($fields as $field)
+    {
+        $type = $field->getField()->type;
+        if ($type == 'SeoScoring_Widget') {
+          $handle = $field->getField()->handle;
+          break;
+        }
+    }
+    return $entry->$handle;
   }
 
   private function _curlPage($url)
@@ -148,7 +205,7 @@ class SeoScoringService extends BaseApplicationComponent
       $seoInfo['totals']['totalTally']++;
       $seoInfo['totals']['totalPoints'] += ($count * $value);
       $seoInfo['totals']['totalOccurrences'] += $count;
-      $object['contains'] = "Yes!";
+      $object['contains'] = true;
       $object['occurrences'] = $count;
       $object['points'] = ($count * $value);
     }
@@ -165,7 +222,7 @@ class SeoScoringService extends BaseApplicationComponent
       $seoInfo['totals']['totalTally']+= $tally_add;
       $seoInfo['totals']['totalPoints']+= $value;
       $seoInfo['totals']['totalOccurrences'] += $count;
-      $object['contains'] = "Yes!";
+      $object['contains'] = true;
       $object['occurrences'] = $count;
       $object['points'] = $value;
     }
@@ -219,38 +276,17 @@ class SeoScoringService extends BaseApplicationComponent
     return $count;
   }
 
-  public function getSeoInfo($entryId)
+}
+
+class seoArray
+{
+  function __construct($name, $description, $key_category)
   {
-    // create new model
-    $seoInfoModel = new SeoScoring_SeoInfoModel();
-
-    // get record from DB
-    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
-
-    if ($seoInfoRecord) {
-      $seoInfoModel = SeoScoring_SeoInfoModel::populateModel($seoInfoRecord);
-    }
-
-
-    return $seoInfoModel->attributes['seoInfo'];
+    $this->name = $name;
+    $this->description = $description;
+    $this->key_category = $key_category;
+    $this->contains = false;
+    $this->points = 0;
+    $this->occurrences = 0;
   }
-
-  public function saveSeoInfo($seoArray, $entryId)
-  {
-    // get record from DB
-    $seoInfoRecord = SeoScoring_SeoInfoRecord::model()->findByAttributes(array('entryId' => $entryId));
-
-    if (!$seoInfoRecord)
-    {
-      $seoInfoRecord = new SeoScoring_SeoInfoRecord;
-      $seoInfoRecord->setAttribute('entryId', $entryId);
-    }
-
-    $seoInfoRecord->setAttribute('seoInfo', $seoArray);
-
-    // save record in DB
-    $seoInfoRecord->save();
-
-  }
-
 }

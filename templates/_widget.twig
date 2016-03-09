@@ -42,7 +42,8 @@
             <tr>
               <th>Category</th>
               <th>Description</th>
-              <th>Exists?/Key Category</th>
+              <th>Exists?</th>
+              <th>Key Category?</th>
               <th>Occurrences</th>
               <th>Points</th>
             </tr>
@@ -50,13 +51,14 @@
           <tbody>
             {% set keyCategoryTotal = 0 %}
             {% for category in table.categories %}
-              {% if category.key_category == "Yes" %}
+              {% if category.key_category %}
                 {% set keyCategoryTotal = keyCategoryTotal + 1 %}
               {% endif %}
               <tr>
                 <td>{{category.name}}</td>
                 <td>{{category.description}}</td>
-                <td>{{category.contains}} / {{category.key_category}}</td>
+                <td>{{category.contains ? 'Yes' : 'No' }}</td>
+                <td>{{category.key_category ? 'Yes' : 'No' }}</td>
                 <td>{{category.occurrences}}</td>
                 <td>{{category.points}}</td>
               </tr>
@@ -64,7 +66,8 @@
             <tr>
               <td><b>Totals</b></td>
               <td></td>
-              <td><b>{{table.totals.totalTally}} out of {{keyCategoryTotal}}</b></td>
+              <td><b>{{table.totals.totalTally}}</b></td>
+              <td><b>{{keyCategoryTotal}}</b></td>
               <td><b>{{table.totals.totalOccurrences}}</b></td>
               <td><b>{{table.totals.totalPoints}}</b></td>
             </tr>
@@ -72,12 +75,12 @@
 
         </table>
 
-        <h2>Initial Rating for {{table.keyword}}: <span style="color:{% if table.initial_rating == "Green"%}#00B200{% elseif table.initial_rating == "Yellow"%}#F4B82A{% elseif table.initial_rating == "Red"%}#B54C39{% endif %}">{{table.initial_rating}}</span></h2>
+        <h2>Initial Rating for {{table.keyword}}: <span class="{{table.initial_rating|lower}}">{{table.initial_rating}}</span></h2>
 
         <h3>If the target keyword is accounted for in fewer than 5 of the key categories, the page is downgraded one level.</h3>
         <h3>If the target keyword is accounted for in fewer than 3 of the key categories, the page is downgraded two levels.</h3>
 
-        <h2>Final Rating for {{table.keyword}}: <span style="color:{% if table.final_rating == "Green"%}#00B200{% elseif table.final_rating == "Yellow"%}#F4B82A{% elseif table.final_rating == "Red"%}#B54C39{% endif %}">{{table.final_rating}}</span></h2>
+        <h2>Final Rating for {{table.keyword}}: <span class="{{table.final_rating|lower}}">{{table.final_rating}}</span></h2>
       </div>
 
     {% endfor %}
