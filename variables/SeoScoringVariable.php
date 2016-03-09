@@ -17,4 +17,8 @@ class SeoScoringVariable
   {
     return craft()->seoScoring->compileSeoTables($entryId);
   }
+  public function getTheTab($entryId)
+  {
+    return craft()->seoScoring->getTheTab($entryId);
+  }
 }

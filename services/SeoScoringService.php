@@ -38,7 +38,6 @@ class SeoScoringService extends BaseApplicationComponent
         $url =        (array) new seoArray('Page URL', "+5 once", true);
         $meta_desc =  (array) new seoArray('Meta Description', "0 bonus points", true);
         $imgs =       (array) new seoArray('Image Alt Text', "+5 once", true);
-        // SeoScoringPlugin::log(print_r($body, true));
 
         // Page Title
         $page_title = !empty($html->find("title",0)) ? strtolower($html->find("title",0)) : "";
@@ -112,8 +111,6 @@ class SeoScoringService extends BaseApplicationComponent
 
     $this->saveSeoInfo($all_keyword_results, $entry->id);
 
-    return $all_keyword_results;
-
   }
 
   public function getSeoInfo($entryId)
@@ -149,7 +146,6 @@ class SeoScoringService extends BaseApplicationComponent
     $seoInfoRecord->save();
 
   }
-
 
   // HELPER FUNCTIONS
   private function _isInFuture($entry)
@@ -274,6 +270,28 @@ class SeoScoringService extends BaseApplicationComponent
     $count = preg_match_all('/\b'.$keyword.'\b/', $tally_string);
 
     return $count;
+  }
+
+  public function getTheTab($entry)
+  {
+    $tabs_array = array();
+    $tabs = $entry->getFieldLayout()->getTabs();
+    foreach ($tabs as $fields) {
+      $tabs_array[$fields->id] = $fields->sortOrder;
+    }
+
+    $the_raw_tab = null;
+    $fields = $entry->getFieldLayout()->getFields();
+    foreach ($fields as $field) {
+      $type = $field->getField()->type;
+      if ($type == 'SeoScoring_Widget') {
+        $the_raw_tab = $field->tabId;
+        break;
+      }
+    }
+
+    return $tabs_array[$the_raw_tab];
+    // SeoScoringPlugin::log(\CVarDumper::dumpAsString($the_tab));
   }
 
 }

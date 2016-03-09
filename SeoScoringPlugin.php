@@ -62,11 +62,13 @@ class SeoScoringPlugin extends BasePlugin
         }
         if ($attribute == 'target_keyword')
         {
-            $keyword = isset($seoInfo[0]) ? $seoInfo[0]['keyword'] : '';
+            $tab_num = craft()->seoScoring->getTheTab($entry);
+            $keyword = isset($seoInfo[0]) ? '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'">'.$seoInfo[0]['keyword'] : '';
             if(isset($seoInfo[0]) && count($seoInfo)>1)
             {
-                $keyword .= " +";
+                $keyword .= ", more...";
             }
+            $keyword .= isset($seoInfo[0]) ? '</a>' : '';
             return $keyword;
         }
     }

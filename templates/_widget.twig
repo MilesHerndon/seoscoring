@@ -2,91 +2,93 @@
 
 {% block main %}
 
-{{ forms.textField({
-    label: 'Target Keyword',
-    required: false,
-    instructions: "Separate Multiple Keywords with commas.",
-    name: name,
-    value: value
-  })
-}}
+<div id="seo-scoring-widget">
+  {{ forms.textField({
+      label: 'Target Keyword',
+      required: false,
+      instructions: "Separate Multiple Keywords with commas.",
+      name: name,
+      value: value
+    })
+  }}
 
-{% set allTables = craft.seoscoring.seoInfo(this.id) %}
+  {% set allTables = craft.seoscoring.seoInfo(this.id) %}
 
-{% if allTables|length %}
-<h1>SEO Keyword Score</h1>
+  {% if allTables|length %}
+  <h1>SEO Keyword Score</h1>
 
-<h2>Scoring Levels:</h2>
-<p><b class="green">Green</b>: 25+</p>
-<p><b class="yellow">Yellow</b>: 15 - 24</p>
-<p><b class="red">Red</b>: Under 15</p>
-<br>
+  <h2>Scoring Levels:</h2>
+  <p><b class="green">Green</b>: 25+</p>
+  <p><b class="yellow">Yellow</b>: 15 - 24</p>
+  <p><b class="red">Red</b>: Under 15</p>
+  <br>
 
-<div class="pane">
-  <nav class="tabs">
-    <ul>
-    {% for table in allTables %}
-      <li><a href="#fields-scoring-tab{{loop.index}}" class="tab {{table.final_rating|lower}}">{{table.keyword}}</a></li>
-    {% endfor %}
-    </ul>
-  </nav>
+  <div class="pane">
+    <nav class="tabs">
+      <ul>
+      {% for table in allTables %}
+        <li><a href="#fields-scoring-tab{{loop.index}}" class="tab {{table.final_rating|lower}}">{{table.keyword}}</a></li>
+      {% endfor %}
+      </ul>
+    </nav>
 
-  <div>
-    {% for table in allTables %}
+    <div>
+      {% for table in allTables %}
 
-      <div class="scoring-tab" id="scoring-tab{{loop.index}}">
-        <h2>Score for <i>{{table.keyword}}</i>:</h2>
+        <div class="scoring-tab" id="scoring-tab{{loop.index}}">
+          <h2>Score for <i>{{table.keyword}}</i>:</h2>
 
-        <table class="data fullwidth">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Description</th>
-              <th>Exists?</th>
-              <th>Key Category?</th>
-              <th>Occurrences</th>
-              <th>Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% set keyCategoryTotal = 0 %}
-            {% for category in table.categories %}
-              {% if category.key_category %}
-                {% set keyCategoryTotal = keyCategoryTotal + 1 %}
-              {% endif %}
+          <table class="data fullwidth">
+            <thead>
               <tr>
-                <td>{{category.name}}</td>
-                <td>{{category.description}}</td>
-                <td>{{category.contains ? 'Yes' : 'No' }}</td>
-                <td>{{category.key_category ? 'Yes' : 'No' }}</td>
-                <td>{{category.occurrences}}</td>
-                <td>{{category.points}}</td>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Exists?</th>
+                <th>Key Category?</th>
+                <th>Occurrences</th>
+                <th>Points</th>
               </tr>
-            {% endfor %}
-            <tr>
-              <td><b>Totals</b></td>
-              <td></td>
-              <td><b>{{table.totals.totalTally}}</b></td>
-              <td><b>{{keyCategoryTotal}}</b></td>
-              <td><b>{{table.totals.totalOccurrences}}</b></td>
-              <td><b>{{table.totals.totalPoints}}</b></td>
-            </tr>
-          </tbody>
+            </thead>
+            <tbody>
+              {% set keyCategoryTotal = 0 %}
+              {% for category in table.categories %}
+                {% if category.key_category %}
+                  {% set keyCategoryTotal = keyCategoryTotal + 1 %}
+                {% endif %}
+                <tr>
+                  <td>{{category.name}}</td>
+                  <td>{{category.description}}</td>
+                  <td>{{category.contains ? 'Yes' : 'No' }}</td>
+                  <td>{{category.key_category ? 'Yes' : 'No' }}</td>
+                  <td>{{category.occurrences}}</td>
+                  <td>{{category.points}}</td>
+                </tr>
+              {% endfor %}
+              <tr>
+                <td><b>Totals</b></td>
+                <td></td>
+                <td><b>{{table.totals.totalTally}}</b></td>
+                <td><b>{{keyCategoryTotal}}</b></td>
+                <td><b>{{table.totals.totalOccurrences}}</b></td>
+                <td><b>{{table.totals.totalPoints}}</b></td>
+              </tr>
+            </tbody>
 
-        </table>
+          </table>
 
-        <h2>Initial Rating for {{table.keyword}}: <span class="{{table.initial_rating|lower}}">{{table.initial_rating}}</span></h2>
+          <h2>Initial Rating for {{table.keyword}}: <span class="{{table.initial_rating|lower}}">{{table.initial_rating}}</span></h2>
 
-        <h3>If the target keyword is accounted for in fewer than 5 of the key categories, the page is downgraded one level.</h3>
-        <h3>If the target keyword is accounted for in fewer than 3 of the key categories, the page is downgraded two levels.</h3>
+          <h3>If the target keyword is accounted for in fewer than 5 of the key categories, the page is downgraded one level.</h3>
+          <h3>If the target keyword is accounted for in fewer than 3 of the key categories, the page is downgraded two levels.</h3>
 
-        <h2>Final Rating for {{table.keyword}}: <span class="{{table.final_rating|lower}}">{{table.final_rating}}</span></h2>
-      </div>
+          <h2>Final Rating for {{table.keyword}}: <span class="{{table.final_rating|lower}}">{{table.final_rating}}</span></h2>
+        </div>
 
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
+  {% endif %}
 </div>
-{% endif %}
 
 {% endblock %}
 
