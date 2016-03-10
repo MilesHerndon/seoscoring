@@ -48,27 +48,15 @@ class SeoScoringPlugin extends BasePlugin
 
     public function getEntryTableAttributeHtml($entry, $attribute)
     {
-        if ($attribute == 'seo_score' || $attribute == 'target_keyword')
-            $seoInfo = craft()->seoScoring->getSeoInfo($entry->id);
-        if ($attribute == 'seo_score')
-        {
-            if (isset($seoInfo[0])) {
-                $score = $seoInfo;
-                return '<span class="'.strtolower($score[0]['final_rating']).'">' . $score[0]['final_rating'] . '</span>';
-            }
-            else{
-                return '';
-            }
-        }
         if ($attribute == 'target_keyword')
         {
+            $seoInfo = craft()->seoScoring->getSeoInfo($entry->id);
             $tab_num = craft()->seoScoring->getTheTab($entry);
-            $keyword = isset($seoInfo[0]) ? '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'">'.$seoInfo[0]['keyword'] : '';
+            $keyword = isset($seoInfo[0]) ? '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'" class="'.strtolower($seoInfo[0]['final_rating']).'">'.$seoInfo[0]['keyword'].'</a>' : '';
             if(isset($seoInfo[0]) && count($seoInfo)>1)
             {
-                $keyword .= ", more...";
+                $keyword .= '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'">...</a>';
             }
-            $keyword .= isset($seoInfo[0]) ? '</a>' : '';
             return $keyword;
         }
     }

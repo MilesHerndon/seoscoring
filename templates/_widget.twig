@@ -55,7 +55,7 @@
                 {% if category.key_category %}
                   {% set keyCategoryTotal = keyCategoryTotal + 1 %}
                 {% endif %}
-                <tr>
+                <tr class="{% if category.contains %}green-row{% endif %}">
                   <td>{{category.name}}</td>
                   <td>{{category.description}}</td>
                   <td>{{category.contains ? 'Yes' : 'No' }}</td>
