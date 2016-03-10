@@ -41,7 +41,6 @@ class SeoScoringPlugin extends BasePlugin
     public function defineAdditionalEntryTableAttributes()
     {
         return array(
-            'seo_score'=>"SEO Score",
             'target_keyword'=>'Primary Target Keyword'
         );
     }
