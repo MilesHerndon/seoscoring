@@ -51,7 +51,7 @@ class SeoScoringPlugin extends BasePlugin
         {
             $seoInfo = craft()->seoScoring->getSeoInfo($entry->id);
             $tab_num = craft()->seoScoring->getTheTab($entry);
-            $keyword = isset($seoInfo[0]) ? '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'" class="'.strtolower($seoInfo[0]['final_rating']).'">'.$seoInfo[0]['keyword'].'</a>' : '';
+            $keyword = isset($seoInfo[0]) ? '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('field'=> 'fields-seo-scoring-widget')).'#tab'.(string)$tab_num.'" class="'.strtolower($seoInfo[0]['final_rating']).'">'.$seoInfo[0]['keyword'].'</a>' : '';
             if(isset($seoInfo[0]) && count($seoInfo)>1)
             {
                 $keyword .= '<a href="'. UrlHelper::getUrlWithParams($entry->cpEditUrl, array('tab'=> (string)$tab_num)).'">...</a>';

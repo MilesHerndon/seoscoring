@@ -289,9 +289,7 @@ class SeoScoringService extends BaseApplicationComponent
         break;
       }
     }
-
     return $tabs_array[$the_raw_tab];
-    // SeoScoringPlugin::log(\CVarDumper::dumpAsString($the_tab));
   }
 
 }

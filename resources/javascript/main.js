@@ -4,35 +4,30 @@ $(document).ready(function(){
 
   scoringTabs.addClass('hidden').first().removeClass('hidden');
 
-  scoringTabs.click(function(e){
-    var $thisTab = $(this).href();
-    scoringTabs.addClass('hidden');
-    $($thisTab).removeClass('hidden');
-  });
-
 });
 
 function getURLParameter(sParam){
-    var sPageURL = window.location.search.substring(1);
-    var sURLVariables = sPageURL.split('&');
-    for (var i = 0; i < sURLVariables.length; i++)
+  var sPageURL = window.location.search.substring(1);
+  var sURLVariables = sPageURL.split('&');
+  for (var i = 0; i < sURLVariables.length; i++)
+  {
+    var sParameterName = sURLVariables[i].split('=');
+    if (sParameterName[0] == sParam)
     {
-      var sParameterName = sURLVariables[i].split('=');
-      if (sParameterName[0] == sParam)
-      {
-        return sParameterName[1];
-      }
+      return sParameterName[1];
     }
   }
+}
 
 $(window).on('load', function(e){
-  var tab = getURLParameter('tab');
-  if (tab) {
-    $('#tabs .tab').removeClass('sel');
-    $('#tab-'+(tab-1)).addClass('sel');
-    $('div[id^=tab]').addClass('hidden');
-    $('#tab'+tab).removeClass('hidden');
-    var top = $('#fields-seo-scoring-widget').offset().top;
+  var $widget = $('#fields-seo-scoring-widget')
+  var tab = $widget.data('tab');
+  var $seoTab = $('#tabs .tab[href="#tab'+tab+'"]');
+  var score = $('#fields-final-rating1').attr('class');
+  $seoTab.addClass(score);
+  var field = getURLParameter('field');
+  if (field == 'fields-seo-scoring-widget') {
+    var top = $widget.offset().top - 40;
     $("html, body").delay(400).animate({ scrollTop: top });
   }
 });

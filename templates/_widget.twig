@@ -2,7 +2,9 @@
 
 {% block main %}
 
-<div id="seo-scoring-widget">
+{% set tab = craft.seoscoring.theTab(this) %}
+
+<div id="seo-scoring-widget" data-tab="{{tab}}">
   {{ forms.textField({
       label: 'Target Keyword',
       required: false,
@@ -81,7 +83,7 @@
           <h3>If the target keyword is accounted for in fewer than 5 of the key categories, the page is downgraded one level.</h3>
           <h3>If the target keyword is accounted for in fewer than 3 of the key categories, the page is downgraded two levels.</h3>
 
-          <h2>Final Rating for {{table.keyword}}: <span class="{{table.final_rating|lower}}">{{table.final_rating}}</span></h2>
+          <h2>Final Rating for {{table.keyword}}: <span id="final-rating{{loop.index}}" class="{{table.final_rating|lower}}">{{table.final_rating}}</span></h2>
         </div>
 
       {% endfor %}
