@@ -41,13 +41,13 @@ class SeoScoringPlugin extends BasePlugin
     public function defineAdditionalEntryTableAttributes()
     {
         return array(
-            'target_keyword'=>'Primary Target Keyword'
+            'seo_score'=>'Seo Score'
         );
     }
 
     public function getEntryTableAttributeHtml($entry, $attribute)
     {
-        if ($attribute == 'target_keyword')
+        if ($attribute == 'seo_score')
         {
             $seoInfo = craft()->seoScoring->getSeoInfo($entry->id);
             $tab_num = craft()->seoScoring->getTheTab($entry);
